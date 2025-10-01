@@ -4,15 +4,13 @@ const User = require("./models/user");
 const app = express();
 const { connectToDB } = require("../src/config/db")
 
+// Parsing the body data
+app.use(express.json())
+
+// Sign up API
 app.post('/signup', async (req, res) => {
-  const userObj = {
-    firstName: "Roman",
-    lastName: "Reigns",
-    username: "Roman21",
-    email: "roman21@gmail.com",
-    password: "Roman123",
-    age: 39
-  }
+  // Dynamically getting the user data
+  const userObj = req.body;
 
   // Created new instance of User model.
   const user = new User(userObj);
