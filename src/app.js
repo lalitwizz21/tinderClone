@@ -16,6 +16,7 @@ app.post('/signup', async (req, res) => {
   const user = new User(userObj);
 
   try {
+    SanitizeBody(userObj, "email")
     // Created the user and send the success message.
     await user.save();
     res.send("User created successfully...");
@@ -83,13 +84,15 @@ app.delete('/user/:id', async (req, res) => {
 });
 
 // Update a user by Id.
-app.patch("/user", async (req, res) => {
-  const id = req.body.id;
+app.patch("/user/:id", async (req, res) => {
+  const id = req.params?.id;
   const userData = req.body;
 
   try {
+    SanitizeBody(userData)
     const updatedUser = await User.findByIdAndUpdate(id, userData, {
-      returnDocument: "after"
+      returnDocument: "after",
+      runValidators: true,
     });
     res.json(updatedUser);
   }
@@ -104,12 +107,25 @@ app.patch("/userByMail", async (req, res) => {
   const userData = req.body;
 
   try {
-    const updatedUser = await User.findOneAndUpdate({ email: mail }, userData);
+    const updatedUser = await User.findOneAndUpdate({ email: mail }, userData, {
+      returnDocument: "after",
+      runValidators: true,
+    });
     res.json(updatedUser)
   } catch (e) {
     res.status(400).send("Something went wrong " + e?.message)
   }
 })
+
+// function to sanitize the body data.
+function SanitizeBody(data, extraKey = "") {
+  const ALLOWED_KEYS = ["firstName", "lastName", "age", "gender", "password", "skills", "imgUrl", "description", extraKey];
+
+  const isValid = Object.keys(data).every(i => ALLOWED_KEYS.includes(i))
+  if (!isValid) {
+    throw new Error("Invalid details are entered.")
+  }
+}
 
 // Connecting to the DB.
 connectToDB().then(() => {
